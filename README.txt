@@ -10,8 +10,8 @@ https://learn.adafruit.com/arduino-tips-tricks-and-techniques/arduino-libraries
 
 
 You're probably going to want to change a few things in the sketch to meet your specific
-setup. The constants between the '// User constants' comments. Your requirements will most 
-likely be different than mine (even if you use the same exact hardware).
+setup. More specifically, the 'user' constants between the 2 '// User constants' comments. 
+Your requirements will most likely be different than mine (even if you use the same exact hardware).
 
 
 

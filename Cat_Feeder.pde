@@ -23,6 +23,7 @@ SparkFun Motor Driver - Dual TB6612FNG (1A): https://www.sparkfun.com/products/9
 1. Add Internet (via web browser) control of the feeders
 2. Add a new button function - hold down the button for a few seconds, and keep holding to continuosly dispense food
    until the button is released
+3. When Internet-enabled, add some kind of alert/notification when the canisters need to be refilled
 ****** Possible future to-dos ******
 
 
