@@ -3,6 +3,10 @@
 
 This is the sketch for my automatic cat feeder project
 
+This sketch was built and tested using Arduino Alpha 0021 (it may not work with higher versions)
+
+Last updated 06/4/2016 - added summer/winter functionality
+
 Credits:
 Button handling taken from: Salsaman - http://forum.arduino.cc/index.php?topic=14479.0
 Motor control: Bildr - http://bildr.org/2012/04/tb6612fng-arduino/
@@ -17,6 +21,13 @@ With the motor breakout board, you can control the direction and speed of the mo
 Pre-made kits/parts used:
 DS1307 Real Time Clock breakout board kit: http://www.adafruit.com/product/264
 SparkFun Motor Driver - Dual TB6612FNG (1A): https://www.sparkfun.com/products/9457
+
+
+Note - feature addition on 6/4/2016 - Summer/Winter mode!
+LED A will blink 3 times when 'initializing' to show that system is in Summer mode OR
+LED B will blink 3 times when 'initializing' to show that system is in Winter mode
+This allows you to dispense different amounts of food, depending on the season
+(My cats tend to eat less in the summer, more in the winter)
 
 
 ****** Possible future to-dos ******
@@ -78,8 +89,10 @@ RTC_DS1307 RTC;
 
 
 // User constants
-const int secondsToTurnMotorA = 5.75; // How many seconds motor A will spin when alarm is triggered (This will be for a full meal)
-const int secondsToTurnMotorB = 3; // How many seconds motor B will spin when alarm is triggered (This will be for a full meal)
+const int secondsToTurnMotorASummer = 3; // How many seconds motor A will spin when alarm is triggered in the Summer (This will be for a full meal)
+const int secondsToTurnMotorAWinter = 5.75; // How many seconds motor A will spin when alarm is triggered in the Winter (This will be for a full meal)
+const int secondsToTurnMotorBSummer = 1; // How many seconds motor B will spin when alarm is triggered in the Summer (This will be for a full meal)
+const int secondsToTurnMotorBWinter = 3; // How many seconds motor B will spin when alarm is triggered in the Winter (This will be for a full meal)
 
 const int secondsToTurnMotorAViaSinglePressButtonA = 1; // How many seconds motor A will spin when button A is pressed
 const int secondsToTurnMotorBViaSinglePressButtonB = .5; // How many seconds motor B will spin when button B is pressed
@@ -98,6 +111,12 @@ const int secondsToTurnMotorBViaLongPressButtonB = 3; // How many seconds motor 
 
 #define BUTTONA 7  // the input pin where the pushbutton A is connected
 #define BUTTONB 2  // the input pin where the pushbutton B is connected
+
+#define SUMMERWINTERSLIDERSWITCH 1 // the input pin where the summer/winter switch is located
+// IMPORTANT/WARNING!!! YOU NEED TO DISCONNECT THIS WHEN UPLOADING A SKETCH FROM AN ARDUINO AS THIS IS THE
+// 'TX' LINE FOR SERIAL COMMUNICATIONS!!
+
+int summerWinterVal = 0; // will be used to store the state of the Summer/Winter mode switch
 
 const int motorA = 1;
 const int motorB = 0;
@@ -148,7 +167,8 @@ void setup () {
     pinMode(BUTTONB, INPUT);  // and BUTTONB is an input
     digitalWrite(BUTTONB, HIGH); // (Not sure what this is for, but was done in the One_Button_3_Functions sketch)
   
-  
+    // summerWinterSliderSwitch
+    pinMode(SUMMERWINTERSLIDERSWITCH, INPUT);
   
     // Motor driver board (again, Sparkfun's Dual TB6612FNG) stuff
     // set the below pins as output pins
@@ -184,6 +204,44 @@ void setup () {
     // ***************************************************************************
     // ***************************************************************************
  
+
+
+    summerWinterVal = digitalRead(SUMMERWINTERSLIDERSWITCH);
+
+    // This is sort of an 'initialization' sequence:
+    //  blink LEDA 3 times to show system is in 'summer' mode OR
+    //  blink LEDB 3 times to show system is in 'winter' mode
+    if (summerWinterVal == HIGH) {
+        digitalWrite(LEDA, HIGH);
+        delay(500);
+        digitalWrite(LEDA, LOW);
+        delay(500);
+        digitalWrite(LEDA, HIGH);
+        delay(500);
+        digitalWrite(LEDA, LOW);
+        delay(500);
+        digitalWrite(LEDA, HIGH);
+        delay(500);
+        digitalWrite(LEDA, LOW);
+        delay(500);
+    } else {
+        digitalWrite(LEDB, HIGH);
+        delay(500);
+        digitalWrite(LEDB, LOW);
+        delay(500);
+        digitalWrite(LEDB, HIGH);
+        delay(500);
+        digitalWrite(LEDB, LOW);
+        delay(500);
+        digitalWrite(LEDB, HIGH);
+        delay(500);
+        digitalWrite(LEDB, LOW);
+        delay(500);
+    }
+
+
+
+
  
 }
  
@@ -211,6 +269,8 @@ void loop () {
     //Serial.println();
     
     
+    
+    
  
     
     // Get button event and act accordingly (watch for button presses, execute appropriate function)
@@ -226,7 +286,9 @@ void loop () {
     if (b2 == 2) doubleClickEvent(2); // double-click on button B was detected
     if (b2 == 3) holdEvent(2); // button-hold on button B was detected
 
-    
+
+    // Read the state of the summerWinterSliderSwitch (again - we already did in the setup() section)
+    summerWinterVal = digitalRead(SUMMERWINTERSLIDERSWITCH);
     
     
  
@@ -267,13 +329,25 @@ void AlarmA(){
    //
    playBreakfastDinnerTones(); // self-explanatory, right?
    digitalWrite(LEDA, HIGH);  // turn status LEDA on
-   moveMotorHighLevel(secondsToTurnMotorA, motorA); // Run motor A (dispense some food)
+   
+   if (summerWinterVal == HIGH) {
+     moveMotorHighLevel(secondsToTurnMotorASummer, motorA); // Run motor A for Summer time (dispense some food)
+   } else {
+     moveMotorHighLevel(secondsToTurnMotorAWinter, motorA); // Run motor A for Winter time (dispense some food)
+   }
+   
    digitalWrite(LEDA, LOW); // turn status LEDA off
   
    Alarm.delay(1000); // Pause for just a second to be safe
   
    digitalWrite(LEDB, HIGH);  // turn status LEDB on
-   moveMotorHighLevel(secondsToTurnMotorB, motorB); // Run motor B (dispense some food)
+   
+   if (summerWinterVal == HIGH) {
+     moveMotorHighLevel(secondsToTurnMotorBSummer, motorB); // Run motor B for Summer time (dispense some food)
+   } else {
+     moveMotorHighLevel(secondsToTurnMotorBWinter, motorB); // Run motor B for Winter time (dispense some food)
+   }
+   
    digitalWrite(LEDB, LOW); // turn status LEDB off
    //
    // MAIN EXECUTION OF ALARM CODE WHERE THINGS HAPPEN!!!
